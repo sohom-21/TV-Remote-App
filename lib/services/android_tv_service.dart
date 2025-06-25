@@ -185,22 +185,59 @@ class AndroidTVService {
   // Scan for Android TV devices on local network
   Future<List<String>> scanForDevices() async {
     final List<String> devices = [];
-    final String subnet = await _getSubnet();
+    final List<String> subnets = await _getAllSubnets();
 
-    if (subnet.isEmpty) return devices;
+    if (subnets.isEmpty) return devices;
+
+    print('Scanning subnets: $subnets');
 
     final List<Future<void>> futures = [];
 
-    for (int i = 1; i <= 254; i++) {
-      final String ip = '$subnet.$i';
-      futures.add(_checkDevice(ip, devices));
+    // Scan all detected subnets
+    for (final subnet in subnets) {
+      for (int i = 1; i <= 254; i++) {
+        final String ip = '$subnet.$i';
+        futures.add(_checkDevice(ip, devices));
+      }
     }
 
     await Future.wait(futures);
+
+    // Also try common hotspot and emulator IPs
+    final List<String> commonIPs = [
+      '10.0.2.2', // Android emulator host
+      '192.168.43.1', // Common Android hotspot gateway
+      '192.168.137.1', // Windows hotspot gateway
+      '172.20.10.1', // iOS hotspot gateway
+      '127.0.0.1', // localhost for testing
+    ];
+
+    for (final ip in commonIPs) {
+      if (!devices.contains(ip)) {
+        await _checkDevice(ip, devices);
+      }
+    }
+
     return devices;
   }
 
   Future<void> _checkDevice(String ip, List<String> devices) async {
+    try {
+      // First try to connect to our server endpoint
+      final response = await http
+          .get(Uri.http('$ip:$_port', '/api/status'))
+          .timeout(const Duration(seconds: 3));
+
+      if (response.statusCode == 200) {
+        print('Found device at $ip (our server)');
+        devices.add(ip);
+        return;
+      }
+    } catch (e) {
+      // Server not responding, try other methods
+    }
+
+    // Try to connect via socket to check if port is open
     try {
       final socket = await Socket.connect(
         ip,
@@ -209,40 +246,55 @@ class AndroidTVService {
       );
       socket.destroy();
 
-      // Try to verify it's an Android TV
-      try {
-        final response = await http
-            .get(Uri.http('$ip:$_port', '/api/status'))
-            .timeout(const Duration(seconds: 2));
-
-        if (response.statusCode == 200) {
-          devices.add(ip);
-        }
-      } catch (e) {
-        // Ignore HTTP errors during scan
-      }
+      print('Found open port at $ip:$_port');
+      devices.add(ip);
     } catch (e) {
-      // Device not reachable
+      // Port not open or device not reachable
     }
   }
 
-  Future<String> _getSubnet() async {
+  Future<List<String>> _getAllSubnets() async {
+    final List<String> subnets = [];
+
     try {
       final interfaces = await NetworkInterface.list();
       for (final interface in interfaces) {
+        print('Interface: ${interface.name}');
+
         for (final address in interface.addresses) {
           if (address.type == InternetAddressType.IPv4 && !address.isLoopback) {
             final parts = address.address.split('.');
             if (parts.length == 4) {
-              return '${parts[0]}.${parts[1]}.${parts[2]}';
+              final subnet = '${parts[0]}.${parts[1]}.${parts[2]}';
+              if (!subnets.contains(subnet)) {
+                subnets.add(subnet);
+                print('Added subnet: $subnet from ${address.address}');
+              }
             }
           }
         }
       }
     } catch (e) {
-      print('Get subnet error: $e');
+      print('Get subnets error: $e');
     }
-    return '';
+
+    // Add common hotspot subnets if not already present
+    final commonSubnets = [
+      '192.168.43', // Android hotspot
+      '192.168.137', // Windows hotspot
+      '172.20.10', // iOS hotspot
+      '10.0.2', // Android emulator
+      '192.168.1', // Common home network
+      '192.168.0', // Common home network
+    ];
+
+    for (final subnet in commonSubnets) {
+      if (!subnets.contains(subnet)) {
+        subnets.add(subnet);
+      }
+    }
+
+    return subnets;
   }
 }
 

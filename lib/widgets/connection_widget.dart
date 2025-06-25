@@ -19,11 +19,9 @@ class _ConnectionWidgetState extends State<ConnectionWidget> {
   final TextEditingController _ipController = TextEditingController();
   final TextEditingController _portController = TextEditingController(
     text: '8080',
-  );
-  bool _isScanning = false;
+  );  bool _isScanning = false;
   bool _isConnecting = false;
   List<String> _discoveredDevices = [];
-  Map<String, dynamic>? _deviceInfo;
   Map<String, dynamic>? _lastConnection;
 
   @override
@@ -80,17 +78,9 @@ class _ConnectionWidgetState extends State<ConnectionWidget> {
   Future<void> _connectToDevice(String ip, int port) async {
     setState(() {
       _isConnecting = true;
-    });
-
-    try {
+    });    try {
       final success = await widget.tvService.connect(ip, port: port);
       if (success) {
-        // Get device info
-        final info = await widget.tvService.getDeviceInfo();
-        setState(() {
-          _deviceInfo = info;
-        });
-
         widget.onConnectionChanged(true, ip);
       } else {
         widget.onConnectionChanged(false, null);
@@ -105,13 +95,9 @@ class _ConnectionWidgetState extends State<ConnectionWidget> {
       });
     }
   }
-
   void _disconnect() {
     widget.tvService.disconnect();
     widget.onConnectionChanged(false, null);
-    setState(() {
-      _deviceInfo = null;
-    });
   }
 
   Future<void> _reconnectToLast() async {
@@ -131,7 +117,6 @@ class _ConnectionWidgetState extends State<ConnectionWidget> {
       ),
     );
   }
-
   @override
   Widget build(BuildContext context) {
     final isConnected = widget.tvService.isConnected;
@@ -145,144 +130,84 @@ class _ConnectionWidgetState extends State<ConnectionWidget> {
           Card(
             child: Padding(
               padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Row(
                 children: [
-                  Row(
-                    children: [
-                      Icon(
-                        isConnected ? Icons.wifi : Icons.wifi_off,
-                        color: isConnected ? Colors.green : Colors.red,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Connection Status',
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.bold),
-                      ),
-                    ],
+                  Icon(
+                    isConnected ? Icons.wifi : Icons.wifi_off,
+                    color: isConnected ? Colors.green : Colors.red,
+                    size: 28,
                   ),
-                  const SizedBox(height: 12),
-                  Text(
-                    isConnected
-                        ? 'Connected to ${widget.tvService.deviceIP}'
-                        : 'Not connected',
-                    style: TextStyle(
-                      color: isConnected ? Colors.green : Colors.red,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  if (isConnected) ...[
-                    const SizedBox(height: 16),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: _disconnect,
-                        icon: const Icon(Icons.power_off),
-                        label: const Text('Disconnect'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red,
-                          foregroundColor: Colors.white,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          isConnected ? 'Connected' : 'Not Connected',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: isConnected ? Colors.green : Colors.grey,
+                          ),
                         ),
-                      ),
+                        if (isConnected)
+                          Text(
+                            widget.tvService.deviceIP ?? '',
+                            style: const TextStyle(fontSize: 14, color: Colors.grey),
+                          ),
+                      ],
                     ),
-                  ],
+                  ),
+                  if (isConnected)
+                    IconButton(
+                      onPressed: _disconnect,
+                      icon: const Icon(Icons.power_off, color: Colors.red),
+                      tooltip: 'Disconnect',
+                    ),
                 ],
               ),
             ),
           ),
 
-          if (_deviceInfo != null) ...[
-            const SizedBox(height: 16),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Device Information',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    ..._deviceInfo!.entries.map(
-                      (entry) => Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 4),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            SizedBox(
-                              width: 80,
-                              child: Text(
-                                '${entry.key}:',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                            Expanded(child: Text(entry.value.toString())),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
+          const SizedBox(height: 16),
 
-          const SizedBox(height: 16), // Last Connection
+          // Last Connection (only if not connected)
           if (_lastConnection != null && !isConnected) ...[
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Row(
                   children: [
-                    Row(
-                      children: [
-                        const Icon(Icons.history, color: Colors.blue),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Last Connection',
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      '${_lastConnection!['ip']}:${_lastConnection!['port']}',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
+                    const Icon(Icons.history, color: Colors.blue, size: 24),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Last Connection',
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            '${_lastConnection!['ip']}:${_lastConnection!['port']}',
+                            style: const TextStyle(fontSize: 14, color: Colors.grey),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed:
-                            _isConnecting ? null : () => _reconnectToLast(),
-                        icon:
-                            _isConnecting
-                                ? const SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                                : const Icon(Icons.refresh),
-                        label: Text(
-                          _isConnecting ? 'Reconnecting...' : 'Reconnect',
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue,
-                          foregroundColor: Colors.white,
-                        ),
+                    ElevatedButton.icon(
+                      onPressed: _isConnecting ? null : _reconnectToLast,
+                      icon: _isConnecting
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.refresh),
+                      label: Text(_isConnecting ? 'Connecting...' : 'Reconnect'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        foregroundColor: Colors.white,
                       ),
                     ),
                   ],
@@ -299,61 +224,77 @@ class _ConnectionWidgetState extends State<ConnectionWidget> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Manual Connection',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                  const Text(
+                    'Connect to TV',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 16),
-                  TextField(
-                    controller: _ipController,
-                    decoration: const InputDecoration(
-                      labelText: 'TV IP Address',
-                      hintText: 'e.g., 192.168.1.100',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.router),
-                    ),
-                    keyboardType: TextInputType.number,
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: _portController,
-                    decoration: const InputDecoration(
-                      labelText: 'Port',
-                      hintText: '8080',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.settings_ethernet),
-                    ),
-                    keyboardType: TextInputType.number,
+                  Row(
+                    children: [
+                      Expanded(
+                        flex: 3,
+                        child: TextField(
+                          controller: _ipController,
+                          decoration: const InputDecoration(
+                            labelText: 'IP Address',
+                            hintText: '192.168.1.100',
+                            border: OutlineInputBorder(),
+                            prefixIcon: Icon(Icons.router),
+                          ),
+                          keyboardType: TextInputType.text,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: TextField(
+                          controller: _portController,
+                          decoration: const InputDecoration(
+                            labelText: 'Port',
+                            border: OutlineInputBorder(),
+                          ),
+                          keyboardType: TextInputType.number,
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 16),
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
-                      onPressed:
-                          _isConnecting || isConnected
-                              ? null
-                              : () {
-                                final ip = _ipController.text.trim();
-                                final port =
-                                    int.tryParse(_portController.text) ?? 8080;
-                                if (ip.isNotEmpty) {
-                                  _connectToDevice(ip, port);
-                                }
-                              },
-                      icon:
-                          _isConnecting
-                              ? const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                              : const Icon(Icons.link),
+                      onPressed: _isConnecting || isConnected
+                          ? null
+                          : () {
+                              final ip = _ipController.text.trim();
+                              final port = int.tryParse(_portController.text) ?? 8080;
+                              if (ip.isNotEmpty) {
+                                _connectToDevice(ip, port);
+                              }
+                            },
+                      icon: _isConnecting
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.link),
                       label: Text(_isConnecting ? 'Connecting...' : 'Connect'),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
                     ),
+                  ),
+                  const SizedBox(height: 12),
+                  
+                  // Quick Connect Buttons
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _buildQuickConnectButton('127.0.0.1', 'Local'),
+                      _buildQuickConnectButton('10.0.2.2', 'Emulator'),
+                      _buildQuickConnectButton('192.168.43.1', 'Hotspot'),
+                      _buildQuickConnectButton('192.168.137.1', 'Windows'),
+                    ],
                   ),
                 ],
               ),
@@ -369,77 +310,57 @@ class _ConnectionWidgetState extends State<ConnectionWidget> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Auto Discovery',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Scan your local network for Android TV devices',
-                    style: TextStyle(fontSize: 14, color: Colors.grey),
-                  ),
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: _isScanning ? null : _scanForDevices,
-                      icon:
-                          _isScanning
-                              ? const SizedBox(
+                  Row(
+                    children: [
+                      const Text(
+                        'Scan Network',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      const Spacer(),
+                      ElevatedButton.icon(
+                        onPressed: _isScanning ? null : _scanForDevices,
+                        icon: _isScanning
+                            ? const SizedBox(
                                 width: 16,
                                 height: 16,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
+                                child: CircularProgressIndicator(strokeWidth: 2),
                               )
-                              : const Icon(Icons.search),
-                      label: Text(
-                        _isScanning ? 'Scanning...' : 'Scan for Devices',
+                            : const Icon(Icons.search),
+                        label: Text(_isScanning ? 'Scanning...' : 'Scan'),
                       ),
-                    ),
+                    ],
                   ),
                   if (_discoveredDevices.isNotEmpty) ...[
                     const SizedBox(height: 16),
-                    const Text(
-                      'Discovered Devices:',
-                      style: TextStyle(fontWeight: FontWeight.w500),
-                    ),
-                    const SizedBox(height: 8),
                     ..._discoveredDevices.map(
                       (device) => Card(
                         margin: const EdgeInsets.symmetric(vertical: 4),
                         child: ListTile(
-                          leading: const Icon(Icons.tv),
+                          leading: const Icon(Icons.tv, color: Colors.blue),
                           title: Text(device),
-                          subtitle: const Text('Android TV Device'),
                           trailing: IconButton(
                             icon: const Icon(Icons.link),
-                            onPressed:
-                                isConnected
-                                    ? null
-                                    : () => _connectToDevice(device, 8080),
+                            onPressed: isConnected
+                                ? null
+                                : () => _connectToDevice(device, 8080),
                           ),
-                          onTap:
-                              isConnected
-                                  ? null
-                                  : () {
-                                    _ipController.text = device;
-                                    _connectToDevice(device, 8080);
-                                  },
+                          onTap: isConnected
+                              ? null
+                              : () {
+                                  _ipController.text = device;
+                                  _connectToDevice(device, 8080);
+                                },
                         ),
                       ),
                     ),
                   ],
                 ],
               ),
-            ),
-          ),
+            ),          ),
 
           const SizedBox(height: 16),
 
-          // Instructions
+          // Simple Connection Info
           Card(
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -448,29 +369,47 @@ class _ConnectionWidgetState extends State<ConnectionWidget> {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.info_outline),
+                      const Icon(Icons.info_outline, color: Colors.blue, size: 20),
                       const SizedBox(width: 8),
-                      Text(
-                        'Setup Instructions',
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.bold),
+                      const Text(
+                        'How to Connect',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
                   const SizedBox(height: 12),
                   const Text(
-                    '1. Make sure your Android TV and phone are on the same WiFi network\n'
-                    '2. Enable Developer Options on your Android TV\n'
-                    '3. Enable USB/Network debugging\n'
-                    '4. Install and run an ADB TCP server app on your TV\n'
-                    '5. Use the scan feature or enter the TV\'s IP address manually',
-                    style: TextStyle(fontSize: 14),
+                    '• For real Android TV: Connect both devices to same WiFi\n'
+                    '• For TV emulator: Connect PC to phone\'s hotspot, run server\n'
+                    '• Use Quick Connect buttons or enter IP manually\n'
+                    '• Enable Developer Options & Network debugging on TV',
+                    style: TextStyle(fontSize: 14, height: 1.5),
                   ),
                 ],
               ),
             ),
           ),
         ],
+      ),
+    );
+  }
+  Widget _buildQuickConnectButton(String ip, String label) {
+    return OutlinedButton(
+      onPressed: (_isConnecting || widget.tvService.isConnected)
+          ? null
+          : () {
+              _ipController.text = ip;
+              final port = int.tryParse(_portController.text) ?? 8080;
+              _connectToDevice(ip, port);
+            },
+      style: OutlinedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        minimumSize: Size.zero,
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(fontSize: 12),
       ),
     );
   }
