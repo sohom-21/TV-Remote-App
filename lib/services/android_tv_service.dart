@@ -1,11 +1,9 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AndroidTVService {
-  static const int defaultPort = 8080;
+  static const int defaultPort = 5555; // ADB port for real Android TV
   static const Duration timeout = Duration(seconds: 5);
   static const String _lastIPKey = 'last_connected_ip';
   static const String _lastPortKey = 'last_connected_port';
@@ -66,113 +64,164 @@ class AndroidTVService {
     return false;
   }
 
-  // Connect to Android TV
+  // Connect to Android TV via ADB
   Future<bool> connect(String ip, {int port = defaultPort}) async {
     _deviceIP = ip;
     _port = port;
 
     try {
-      final response = await http
-          .get(
-            Uri.http('$ip:$port', '/api/status'),
-            headers: {'Content-Type': 'application/json'},
-          )
-          .timeout(timeout);
+      // Try to connect via socket first to check if ADB port is open
+      final socket = await Socket.connect(ip, port, timeout: timeout);
+      socket.destroy();
 
-      if (response.statusCode == 200) {
-        _isConnected = true;
-        // Save successful connection
-        await _saveLastConnection(ip, port);
-        return true;
-      }
+      _isConnected = true;
+      // Save successful connection
+      await _saveLastConnection(ip, port);
+      print('Connected to Android TV at $ip:$port');
+      return true;
     } catch (e) {
       print('Connection error: $e');
+      _isConnected = false;
+      return false;
     }
-
-    _isConnected = false;
-    return false;
   }
 
-  // Send key command to Android TV
+  // Send key command via ADB
   Future<bool> sendKey(String keyCode) async {
     if (!_isConnected || _deviceIP == null) return false;
 
     try {
-      final response = await http
-          .post(
-            Uri.http('$_deviceIP:$_port', '/api/command'),
-            headers: {'Content-Type': 'application/json'},
-            body: jsonEncode({'type': 'key', 'code': keyCode}),
-          )
-          .timeout(timeout);
+      // Use adb shell input keyevent command
+      final result = await Process.run('adb', ['connect', '$_deviceIP:$_port']);
 
-      return response.statusCode == 200;
+      if (result.exitCode != 0) {
+        print('ADB connect failed: ${result.stderr}');
+        return false;
+      }
+
+      // Send keyevent
+      final keyResult = await Process.run('adb', [
+        '-s',
+        '$_deviceIP:$_port',
+        'shell',
+        'input',
+        'keyevent',
+        _getKeyCode(keyCode),
+      ]);
+
+      return keyResult.exitCode == 0;
     } catch (e) {
       print('Send key error: $e');
       return false;
     }
   }
 
-  // Send text input to Android TV
+  // Send text input via ADB
   Future<bool> sendText(String text) async {
     if (!_isConnected || _deviceIP == null) return false;
 
     try {
-      final response = await http
-          .post(
-            Uri.http('$_deviceIP:$_port', '/api/command'),
-            headers: {'Content-Type': 'application/json'},
-            body: jsonEncode({'type': 'text', 'text': text}),
-          )
-          .timeout(timeout);
+      final result = await Process.run('adb', [
+        '-s',
+        '$_deviceIP:$_port',
+        'shell',
+        'input',
+        'text',
+        '"$text"',
+      ]);
 
-      return response.statusCode == 200;
+      return result.exitCode == 0;
     } catch (e) {
       print('Send text error: $e');
       return false;
     }
   }
 
-  // Launch an app on Android TV
+  // Launch an app via ADB
   Future<bool> launchApp(String packageName) async {
     if (!_isConnected || _deviceIP == null) return false;
 
     try {
-      final response = await http
-          .post(
-            Uri.http('$_deviceIP:$_port', '/api/command'),
-            headers: {'Content-Type': 'application/json'},
-            body: jsonEncode({'type': 'launch', 'package': packageName}),
-          )
-          .timeout(timeout);
+      List<String> args = ['-s', '$_deviceIP:$_port', 'shell', 'am', 'start'];
 
-      return response.statusCode == 200;
+      // Special handling for TV Settings
+      if (packageName == 'com.android.tv.settings') {
+        args.addAll(['-a', 'android.settings.SETTINGS']);
+      } else {
+        args.addAll([
+          '-a',
+          'android.intent.action.MAIN',
+          '-c',
+          'android.intent.category.LAUNCHER',
+          packageName,
+        ]);
+      }
+
+      final result = await Process.run('adb', args);
+
+      if (result.exitCode == 0) {
+        return true;
+      }
+
+      // Fallback: Try monkey command
+      final monkeyResult = await Process.run('adb', [
+        '-s',
+        '$_deviceIP:$_port',
+        'shell',
+        'monkey',
+        '-p',
+        packageName,
+        '1',
+      ]);
+
+      return monkeyResult.exitCode == 0;
     } catch (e) {
       print('Launch app error: $e');
       return false;
     }
   }
 
-  // Get device information
+  // Get device information via ADB
   Future<Map<String, dynamic>?> getDeviceInfo() async {
     if (!_isConnected || _deviceIP == null) return null;
 
     try {
-      final response = await http
-          .get(
-            Uri.http('$_deviceIP:$_port', '/api/info'),
-            headers: {'Content-Type': 'application/json'},
-          )
-          .timeout(timeout);
+      final modelResult = await Process.run('adb', [
+        '-s',
+        '$_deviceIP:$_port',
+        'shell',
+        'getprop',
+        'ro.product.model',
+      ]);
 
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body);
-      }
+      final manufacturerResult = await Process.run('adb', [
+        '-s',
+        '$_deviceIP:$_port',
+        'shell',
+        'getprop',
+        'ro.product.manufacturer',
+      ]);
+
+      final versionResult = await Process.run('adb', [
+        '-s',
+        '$_deviceIP:$_port',
+        'shell',
+        'getprop',
+        'ro.build.version.release',
+      ]);
+
+      return {
+        'name': 'Android TV',
+        'model': modelResult.stdout.toString().trim(),
+        'manufacturer': manufacturerResult.stdout.toString().trim(),
+        'version': 'Android ${versionResult.stdout.toString().trim()}',
+        'ip': _deviceIP,
+        'port': _port,
+      };
     } catch (e) {
       print('Get device info error: $e');
+      return null;
     }
-
-    return null;
   }
 
   // Disconnect from Android TV
@@ -193,7 +242,7 @@ class AndroidTVService {
 
     final List<Future<void>> futures = [];
 
-    // Scan all detected subnets
+    // Scan all detected subnets for port 5555 (ADB)
     for (final subnet in subnets) {
       for (int i = 1; i <= 254; i++) {
         final String ip = '$subnet.$i';
@@ -203,54 +252,54 @@ class AndroidTVService {
 
     await Future.wait(futures);
 
-    // Also try common hotspot and emulator IPs
-    final List<String> commonIPs = [
-      '10.0.2.2', // Android emulator host
-      '192.168.43.1', // Common Android hotspot gateway
-      '192.168.137.1', // Windows hotspot gateway
-      '172.20.10.1', // iOS hotspot gateway
-      '127.0.0.1', // localhost for testing
-    ];
-
-    for (final ip in commonIPs) {
-      if (!devices.contains(ip)) {
-        await _checkDevice(ip, devices);
-      }
-    }
-
     return devices;
   }
 
   Future<void> _checkDevice(String ip, List<String> devices) async {
     try {
-      // First try to connect to our server endpoint
-      final response = await http
-          .get(Uri.http('$ip:$_port', '/api/status'))
-          .timeout(const Duration(seconds: 3));
-
-      if (response.statusCode == 200) {
-        print('Found device at $ip (our server)');
-        devices.add(ip);
-        return;
-      }
-    } catch (e) {
-      // Server not responding, try other methods
-    }
-
-    // Try to connect via socket to check if port is open
-    try {
+      // Try to connect via socket to check if ADB port 5555 is open
       final socket = await Socket.connect(
         ip,
-        _port,
+        5555,
         timeout: const Duration(seconds: 2),
       );
       socket.destroy();
 
-      print('Found open port at $ip:$_port');
+      print('Found Android TV at $ip:5555');
       devices.add(ip);
     } catch (e) {
       // Port not open or device not reachable
     }
+  }
+
+  // Convert key name to Android key code number
+  String _getKeyCode(String keyName) {
+    const keyMap = {
+      'KEYCODE_POWER': '26',
+      'KEYCODE_HOME': '3',
+      'KEYCODE_MENU': '82',
+      'KEYCODE_BACK': '4',
+      'KEYCODE_DPAD_UP': '19',
+      'KEYCODE_DPAD_DOWN': '20',
+      'KEYCODE_DPAD_LEFT': '21',
+      'KEYCODE_DPAD_RIGHT': '22',
+      'KEYCODE_DPAD_CENTER': '23',
+      'KEYCODE_VOLUME_UP': '24',
+      'KEYCODE_VOLUME_DOWN': '25',
+      'KEYCODE_VOLUME_MUTE': '164',
+      'KEYCODE_MEDIA_PLAY_PAUSE': '85',
+      'KEYCODE_MEDIA_PLAY': '126',
+      'KEYCODE_MEDIA_PAUSE': '127',
+      'KEYCODE_MEDIA_STOP': '86',
+      'KEYCODE_MEDIA_NEXT': '87',
+      'KEYCODE_MEDIA_PREVIOUS': '88',
+      'KEYCODE_MEDIA_REWIND': '89',
+      'KEYCODE_MEDIA_FAST_FORWARD': '90',
+      'KEYCODE_SEARCH': '84',
+      'KEYCODE_APP_SWITCH': '187',
+    };
+
+    return keyMap[keyName] ?? '23'; // Default to center/enter
   }
 
   Future<List<String>> _getAllSubnets() async {

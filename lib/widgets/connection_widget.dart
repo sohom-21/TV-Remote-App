@@ -18,8 +18,9 @@ class ConnectionWidget extends StatefulWidget {
 class _ConnectionWidgetState extends State<ConnectionWidget> {
   final TextEditingController _ipController = TextEditingController();
   final TextEditingController _portController = TextEditingController(
-    text: '8080',
-  );  bool _isScanning = false;
+    text: '5555',
+  );
+  bool _isScanning = false;
   bool _isConnecting = false;
   List<String> _discoveredDevices = [];
   Map<String, dynamic>? _lastConnection;
@@ -78,7 +79,8 @@ class _ConnectionWidgetState extends State<ConnectionWidget> {
   Future<void> _connectToDevice(String ip, int port) async {
     setState(() {
       _isConnecting = true;
-    });    try {
+    });
+    try {
       final success = await widget.tvService.connect(ip, port: port);
       if (success) {
         widget.onConnectionChanged(true, ip);
@@ -95,6 +97,7 @@ class _ConnectionWidgetState extends State<ConnectionWidget> {
       });
     }
   }
+
   void _disconnect() {
     widget.tvService.disconnect();
     widget.onConnectionChanged(false, null);
@@ -117,6 +120,7 @@ class _ConnectionWidgetState extends State<ConnectionWidget> {
       ),
     );
   }
+
   @override
   Widget build(BuildContext context) {
     final isConnected = widget.tvService.isConnected;
@@ -153,7 +157,10 @@ class _ConnectionWidgetState extends State<ConnectionWidget> {
                         if (isConnected)
                           Text(
                             widget.tvService.deviceIP ?? '',
-                            style: const TextStyle(fontSize: 14, color: Colors.grey),
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey,
+                            ),
                           ),
                       ],
                     ),
@@ -186,25 +193,36 @@ class _ConnectionWidgetState extends State<ConnectionWidget> {
                         children: [
                           const Text(
                             'Last Connection',
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                           Text(
                             '${_lastConnection!['ip']}:${_lastConnection!['port']}',
-                            style: const TextStyle(fontSize: 14, color: Colors.grey),
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey,
+                            ),
                           ),
                         ],
                       ),
                     ),
                     ElevatedButton.icon(
                       onPressed: _isConnecting ? null : _reconnectToLast,
-                      icon: _isConnecting
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Icon(Icons.refresh),
-                      label: Text(_isConnecting ? 'Connecting...' : 'Reconnect'),
+                      icon:
+                          _isConnecting
+                              ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                              : const Icon(Icons.refresh),
+                      label: Text(
+                        _isConnecting ? 'Connecting...' : 'Reconnect',
+                      ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.blue,
                         foregroundColor: Colors.white,
@@ -261,22 +279,27 @@ class _ConnectionWidgetState extends State<ConnectionWidget> {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
-                      onPressed: _isConnecting || isConnected
-                          ? null
-                          : () {
-                              final ip = _ipController.text.trim();
-                              final port = int.tryParse(_portController.text) ?? 8080;
-                              if (ip.isNotEmpty) {
-                                _connectToDevice(ip, port);
-                              }
-                            },
-                      icon: _isConnecting
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Icon(Icons.link),
+                      onPressed:
+                          _isConnecting || isConnected
+                              ? null
+                              : () {
+                                final ip = _ipController.text.trim();
+                                final port =
+                                    int.tryParse(_portController.text) ?? 5555;
+                                if (ip.isNotEmpty) {
+                                  _connectToDevice(ip, port);
+                                }
+                              },
+                      icon:
+                          _isConnecting
+                              ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                              : const Icon(Icons.link),
                       label: Text(_isConnecting ? 'Connecting...' : 'Connect'),
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 12),
@@ -284,16 +307,16 @@ class _ConnectionWidgetState extends State<ConnectionWidget> {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  
+
                   // Quick Connect Buttons
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
                     children: [
-                      _buildQuickConnectButton('127.0.0.1', 'Local'),
-                      _buildQuickConnectButton('10.0.2.2', 'Emulator'),
+                      _buildQuickConnectButton('192.168.153.31', 'Your TV'),
                       _buildQuickConnectButton('192.168.43.1', 'Hotspot'),
                       _buildQuickConnectButton('192.168.137.1', 'Windows'),
+                      _buildQuickConnectButton('192.168.1.1', 'Router'),
                     ],
                   ),
                 ],
@@ -314,18 +337,24 @@ class _ConnectionWidgetState extends State<ConnectionWidget> {
                     children: [
                       const Text(
                         'Scan Network',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       const Spacer(),
                       ElevatedButton.icon(
                         onPressed: _isScanning ? null : _scanForDevices,
-                        icon: _isScanning
-                            ? const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(strokeWidth: 2),
-                              )
-                            : const Icon(Icons.search),
+                        icon:
+                            _isScanning
+                                ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                                : const Icon(Icons.search),
                         label: Text(_isScanning ? 'Scanning...' : 'Scan'),
                       ),
                     ],
@@ -340,23 +369,26 @@ class _ConnectionWidgetState extends State<ConnectionWidget> {
                           title: Text(device),
                           trailing: IconButton(
                             icon: const Icon(Icons.link),
-                            onPressed: isConnected
-                                ? null
-                                : () => _connectToDevice(device, 8080),
+                            onPressed:
+                                isConnected
+                                    ? null
+                                    : () => _connectToDevice(device, 5555),
                           ),
-                          onTap: isConnected
-                              ? null
-                              : () {
-                                  _ipController.text = device;
-                                  _connectToDevice(device, 8080);
-                                },
+                          onTap:
+                              isConnected
+                                  ? null
+                                  : () {
+                                    _ipController.text = device;
+                                    _connectToDevice(device, 5555);
+                                  },
                         ),
                       ),
                     ),
                   ],
                 ],
               ),
-            ),          ),
+            ),
+          ),
 
           const SizedBox(height: 16),
 
@@ -369,20 +401,27 @@ class _ConnectionWidgetState extends State<ConnectionWidget> {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.info_outline, color: Colors.blue, size: 20),
+                      const Icon(
+                        Icons.info_outline,
+                        color: Colors.blue,
+                        size: 20,
+                      ),
                       const SizedBox(width: 8),
                       const Text(
                         'How to Connect',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 12),
                   const Text(
-                    '• For real Android TV: Connect both devices to same WiFi\n'
-                    '• For TV emulator: Connect PC to phone\'s hotspot, run server\n'
-                    '• Use Quick Connect buttons or enter IP manually\n'
-                    '• Enable Developer Options & Network debugging on TV',
+                    '• For Android TV: Enable Developer Options & ADB over WiFi\n'
+                    '• Both devices must be on same WiFi network\n'
+                    '• Use port 5555 for ADB connections\n'
+                    '• Go to TV Settings → About → Build Number (press 7 times)',
                     style: TextStyle(fontSize: 14, height: 1.5),
                   ),
                 ],
@@ -393,24 +432,23 @@ class _ConnectionWidgetState extends State<ConnectionWidget> {
       ),
     );
   }
+
   Widget _buildQuickConnectButton(String ip, String label) {
     return OutlinedButton(
-      onPressed: (_isConnecting || widget.tvService.isConnected)
-          ? null
-          : () {
-              _ipController.text = ip;
-              final port = int.tryParse(_portController.text) ?? 8080;
-              _connectToDevice(ip, port);
-            },
+      onPressed:
+          (_isConnecting || widget.tvService.isConnected)
+              ? null
+              : () {
+                _ipController.text = ip;
+                final port = int.tryParse(_portController.text) ?? 5555;
+                _connectToDevice(ip, port);
+              },
       style: OutlinedButton.styleFrom(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         minimumSize: Size.zero,
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
       ),
-      child: Text(
-        label,
-        style: const TextStyle(fontSize: 12),
-      ),
+      child: Text(label, style: const TextStyle(fontSize: 12)),
     );
   }
 }
