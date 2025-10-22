@@ -18,7 +18,7 @@ class ConnectionWidget extends StatefulWidget {
 class _ConnectionWidgetState extends State<ConnectionWidget> {
   final TextEditingController _ipController = TextEditingController();
   final TextEditingController _portController = TextEditingController(
-    text: '5555',
+    text: '8080',
   );
   bool _isScanning = false;
   bool _isConnecting = false;
@@ -285,7 +285,7 @@ class _ConnectionWidgetState extends State<ConnectionWidget> {
                               : () {
                                 final ip = _ipController.text.trim();
                                 final port =
-                                    int.tryParse(_portController.text) ?? 5555;
+                                    int.tryParse(_portController.text) ?? 8080;
                                 if (ip.isNotEmpty) {
                                   _connectToDevice(ip, port);
                                 }
@@ -313,10 +313,10 @@ class _ConnectionWidgetState extends State<ConnectionWidget> {
                     spacing: 8,
                     runSpacing: 8,
                     children: [
-                      _buildQuickConnectButton('192.168.153.31', 'Your TV'),
-                      _buildQuickConnectButton('192.168.43.1', 'Hotspot'),
+                      _buildQuickConnectButton('127.0.0.1', 'Localhost'),
+                      _buildQuickConnectButton('10.0.2.2', 'Emulator'),
+                      _buildQuickConnectButton('10.106.178.46', 'Server'),
                       _buildQuickConnectButton('192.168.137.1', 'Windows'),
-                      _buildQuickConnectButton('192.168.1.1', 'Router'),
                     ],
                   ),
                 ],
@@ -372,14 +372,14 @@ class _ConnectionWidgetState extends State<ConnectionWidget> {
                             onPressed:
                                 isConnected
                                     ? null
-                                    : () => _connectToDevice(device, 5555),
+                                    : () => _connectToDevice(device, 8080),
                           ),
                           onTap:
                               isConnected
                                   ? null
                                   : () {
                                     _ipController.text = device;
-                                    _connectToDevice(device, 5555);
+                                    _connectToDevice(device, 8080);
                                   },
                         ),
                       ),
@@ -418,10 +418,10 @@ class _ConnectionWidgetState extends State<ConnectionWidget> {
                   ),
                   const SizedBox(height: 12),
                   const Text(
-                    '• For Android TV: Enable Developer Options & ADB over WiFi\n'
-                    '• Both devices must be on same WiFi network\n'
-                    '• Use port 5555 for ADB connections\n'
-                    '• Go to TV Settings → About → Build Number (press 7 times)',
+                    '• For Android TV emulator: Run the bridge server on your PC\n'
+                    '• Connect your phone to PC\'s network (same WiFi or hotspot)\n'
+                    '• Use port 8080 for HTTP server connections\n'
+                    '• Try "Localhost" if testing on same device',
                     style: TextStyle(fontSize: 14, height: 1.5),
                   ),
                 ],
@@ -440,7 +440,7 @@ class _ConnectionWidgetState extends State<ConnectionWidget> {
               ? null
               : () {
                 _ipController.text = ip;
-                final port = int.tryParse(_portController.text) ?? 5555;
+                final port = int.tryParse(_portController.text) ?? 8080;
                 _connectToDevice(ip, port);
               },
       style: OutlinedButton.styleFrom(

@@ -1,16 +1,18 @@
-# tv_remote
+### TV Remote App
 
-A new Flutter project.
+### Steps to Run the Application
 
-## Getting Started
+1. **Get Packages**
+    ```
+    flutter pub get
+    ```
+2. **Start Python Server for testing**
+    ```
+    python .\server\tv_remote_server.py
+    ```
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+2. **Run the Application**
+    ```
+    flutter run
+    ```
+    
