@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy - TV Remote Control</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            color: #2c3e50;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        h2 {
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 5px;
+            margin-top: 30px;
+        }
+        p, ul {
+            margin-bottom: 15px;
+        }
+        ul {
+            padding-left: 20px;
+        }
+        .highlight {
+            background-color: #ecf0f1;
+            padding: 10px;
+            border-left: 4px solid #3498db;
+            margin: 15px 0;
+        }
+        .contact {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 30px;
+        }
+        a {
+            color: #3498db;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        @media (max-width: 600px) {
+            .container {
+                margin: 10px;
+                padding: 15px;
+            }
+            h1 {
+                font-size: 24px;
+            }
+            h2 {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Privacy Policy for TV Remote Control</h1>
+        <p><strong>Effective Date:</strong> [21-10-25]</p>
+        <p>This Privacy Policy describes how TV Remote Control ("we," "us," or "our") collects, uses, and protects your information when you use our mobile application ("App"). We are committed to protecting your privacy and complying with applicable laws, including those in India under the Information Technology Act, 2000, and emerging data protection regulations.</p>
+        <p>By using the App, you agree to the collection and use of information in accordance with this policy. If you do not agree, please do not use the App.</p>
+
+        <h2>1. What is TV Remote Control?</h2>
+        <p>TV Remote Control is a Flutter-based mobile app that allows users to control Android TV emulators remotely over a local network. The app scans for compatible devices, establishes HTTP connections, and sends commands (e.g., key presses, app launches, text input) to control TV functions. It does not collect or transmit data outside your local network unless explicitly configured otherwise.</p>
+
+        <h2>2. Information We Collect</h2>
+        <p>We follow a principle of data minimization. We only collect information necessary for the App's core functionality and do not collect personal data beyond what's required for operation.</p>
+        <ul>
+            <li><strong>Network Information:</strong> IP addresses of devices on your local network (collected during network scanning to discover Android TV emulators). This is temporary and not stored permanently.</li>
+            <li><strong>Connection History:</strong> The last successful connection details (IP address and port) stored locally on your device using SharedPreferences. This helps with auto-reconnection but can be cleared at any time.</li>
+            <li><strong>Device Information:</strong> Basic device model and manufacturer details from connected Android TV emulators (fetched via HTTP API for display purposes only).</li>
+        </ul>
+        <p class="highlight">We do not collect personally identifiable information (PII) such as names, emails, phone numbers, or location data. No data is collected for advertising, analytics, or marketing purposes.</p>
+
+        <h2>3. How We Use Your Information</h2>
+        <p>Information is used solely to enable the App's functionality:</p>
+        <ul>
+            <li>To scan and connect to Android TV emulators on your local network.</li>
+            <li>To send remote control commands (e.g., navigation, volume, app launches) via HTTP.</li>
+            <li>To remember your last connection for convenience (auto-reconnect feature).</li>
+            <li>To display connection status and device information in the App interface.</li>
+        </ul>
+        <p>We do not use your data for any other purposes, including profiling, tracking, or sharing with third parties.</p>
+
+        <h2>4. Permissions and Why We Need Them</h2>
+        <p>The App requires certain Android permissions to function. These are standard for network-based apps and are requested only when necessary:</p>
+        <ul>
+            <li><strong>INTERNET:</strong> Allows the App to communicate with Android TV emulators over HTTP. Without this, remote control features cannot work.</li>
+            <li><strong>ACCESS_NETWORK_STATE:</strong> Checks network connectivity to ensure stable connections.</li>
+            <li><strong>ACCESS_WIFI_STATE:</strong> Detects WiFi networks for device scanning and connection.</li>
+            <li><strong>CHANGE_WIFI_STATE:</strong> Enables switching WiFi states if needed for network operations (rarely used).</li>
+        </ul>
+        <p>Permissions are handled via the permission_handler package and can be revoked in your device settings. Revoking may limit App functionality.</p>
+
+        <h2>5. Data Sharing and Disclosure</h2>
+        <p>We do not share, sell, rent, or disclose your information to any third parties. All data remains on your device or within your local network. The App does not integrate with external services (e.g., no cloud storage, analytics, or ads).</p>
+        <p>In compliance with Indian laws, we will only disclose data if required by law (e.g., court order) or to protect our rights, but this is extremely unlikely given the minimal data collected.</p>
+
+        <h2>6. Data Security</h2>
+        <p>We take reasonable measures to protect your information:</p>
+        <ul>
+            <li>Data is stored locally on your device (e.g., SharedPreferences) and not transmitted externally.</li>
+            <li>Communications occur over your local network via HTTP (not HTTPS, as it's for local use only).</li>
+            <li>No encryption is applied to local data, but we recommend using secure networks.</li>
+            <li>We do not store sensitive data like passwords or payment information.</li>
+        </ul>
+        <p>However, no method of transmission over the internet or local networks is 100% secure. Use at your own risk.</p>
+
+        <h2>7. Your Rights</h2>
+        <p>Under applicable laws, including those in India, you have the following rights:</p>
+        <ul>
+            <li><strong>Access:</strong> Request details of any data we hold (though it's minimal and local).</li>
+            <li><strong>Deletion:</strong> Clear stored connection history via the App's settings or by uninstalling the App.</li>
+            <li><strong>Opt-Out:</strong> Disable auto-reconnect or revoke permissions in device settings.</li>
+            <li><strong>Complaints:</strong> If you believe your data rights have been violated, contact us or relevant authorities (e.g., India's Ministry of Electronics and Information Technology).</li>
+        </ul>
+        <p>To exercise these rights, contact us using the details below.</p>
+
+        <h2>8. Children's Privacy</h2>
+        <p>The App is not intended for children under 13. We do not knowingly collect data from children. If we discover such collection, we will delete it immediately.</p>
+
+        <h2>9. Changes to This Policy</h2>
+        <p>We may update this policy occasionally. Changes will be posted here with an updated effective date. Continued use of the App constitutes acceptance of the new policy.</p>
+
+        <h2>10. Contact Us</h2>
+        <div class="contact">
+            <p>If you have questions about this Privacy Policy or the App, contact us:</p>
+            <p><strong>Email:</strong> <strong> <i>codeviacrewofficials@gmail.com</i></strong></p>
+            <p><strong>Address:</strong> [Your Physical Address, if applicable]</p>
+            <p><strong>App Version:</strong> 1.0.0</p>
+        </div>
+
+        <p>This policy is governed by the laws of India. By using the App, you consent to the terms herein.</p>
+    </div>
+</body>
+</html>
