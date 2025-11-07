@@ -224,7 +224,7 @@ class _ConnectionWidgetState extends State<ConnectionWidget> {
                         _isConnecting ? 'Connecting...' : 'Reconnect',
                       ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue,
+                        backgroundColor: Colors.blueAccent[400],
                         foregroundColor: Colors.white,
                       ),
                     ),
